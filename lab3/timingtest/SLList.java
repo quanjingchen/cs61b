@@ -77,5 +77,7 @@ public class SLList<Item> {
 		SLList L = new SLList();
 		L.addLast(20);
 		System.out.println(L.size());
+
+
 	}
 }
