@@ -60,7 +60,7 @@ public class LinkedListDeque<Bibimbap> {
         if (size == 0) {
             return null;
         }
-        Bibimbap x =  get(0);
+        Bibimbap x =  sentinel.next.item;
         sentinel.next = sentinel.next.next;
         sentinel.next.prev = sentinel;
         size -= 1;
@@ -72,7 +72,7 @@ public class LinkedListDeque<Bibimbap> {
         if (size == 0) {
             return null;
         }
-        Bibimbap x =  get(size-1);
+        Bibimbap x = sentinel.prev.item;
         sentinel.prev = sentinel.prev.prev;
         sentinel.prev.next = sentinel;
         size -= 1;
