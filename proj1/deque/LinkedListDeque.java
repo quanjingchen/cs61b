@@ -1,7 +1,9 @@
 package deque;
 
+import java.util.Iterator;
+
 /** Circular Doubly Linked List. */
-public class LinkedListDeque<Bibimbap> {
+public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibimbap> {
 
     private class Node {
         public Bibimbap item;
@@ -32,6 +34,7 @@ public class LinkedListDeque<Bibimbap> {
     }
 
     /** Adds x to the front of the list. */
+    @Override
     public void addFirst(Bibimbap x) {
         sentinel.next = new Node(x, sentinel, sentinel.next);
         sentinel.next.next.prev = sentinel.next;
@@ -39,23 +42,22 @@ public class LinkedListDeque<Bibimbap> {
     }
 
     /** Adds x to the end of the list. */
+    @Override
     public void addLast(Bibimbap x) {
         sentinel.prev = new Node(x, sentinel.prev, sentinel);
         sentinel.prev.prev.next =  sentinel.prev;
         size += 1;
     }
 
-    /** determine if deque is empty. */
-    public boolean isEmpty() {
-        return size == 0;
-    }
 
     /** return the size of the list. */
+    @Override
     public int size() {
         return size;
     }
 
     /** Removes and returns the item at the front of the deque. */
+    @Override
     public Bibimbap removeFirst() {
         if (size == 0) {
             return null;
@@ -68,6 +70,7 @@ public class LinkedListDeque<Bibimbap> {
     }
 
     /** Removes and returns the item at the back of the deque. */
+    @Override
     public Bibimbap removeLast() {
         if (size == 0) {
             return null;
@@ -80,6 +83,7 @@ public class LinkedListDeque<Bibimbap> {
     }
 
     /** Gets the item at the given index, where 0 is the front, 1 is the next item. */
+    @Override
     public Bibimbap get(int index) {
         if (size == 0 || index > size - 1) {
             return null;
@@ -93,7 +97,28 @@ public class LinkedListDeque<Bibimbap> {
         return current.item;
     }
 
+    /** Same as get, but uses recursion. */
+    public Bibimbap getRecursive(int index) {
+        if (size == 0 || index > size - 1) {
+            return null;
+        }
+        return getRecursive_help(index).item;
+    }
+
+    public Node getRecursive_help(int index) {
+
+        if (index == 0) {
+            return sentinel.next;
+        }
+        if (index > 0) {
+            return getRecursive_help(index - 1).next;
+        }
+        return null;
+    }
+
+
     /** Prints the items in the deque from first to last, separated by a space. */
+    @Override
     public void printDeque() {
         Node current = sentinel;
         while (current.next != sentinel) {
@@ -104,10 +129,42 @@ public class LinkedListDeque<Bibimbap> {
     }
 
 
+    /** The Deque objects we’ll make are iterable. */
+    public Iterator<Bibimbap> iterator() {
+        return new LinkedListDeque.LLDIterator();
+    }
 
+    private class LLDIterator implements Iterator<Bibimbap> {
+        private int wizPos;
 
+        public LLDIterator() {
+            wizPos = 0;
+        }
 
+        public boolean hasNext() {
+            return wizPos < size;
+        }
 
+        public Bibimbap next() {
+            Bibimbap returnItem = get(wizPos);
+            wizPos += 1;
+            return returnItem;
+        }
+    }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) { return false; }
+        if (this == o) { return true; };
+        if (!(o instanceof Deque)) { return false; }
+        Deque<Bibimbap> other = (Deque<Bibimbap>) o;
+        if (this.size() != other.size()) { return false; }
+        for (int index = 0; index < size; index ++) {
+            if (this.get(index) != other.get(index)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

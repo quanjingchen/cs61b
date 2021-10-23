@@ -2,21 +2,32 @@ package deque;
 
 public class LLDTest {
     public static void main (String[] args) {
-        ArrayDeque<Integer> a = new ArrayDeque<Integer>();
-        a.addLast(0);
-        a.addLast(1);
-        a.addLast(2);
-        a.addLast(3);
+        LinkedListDeque<String> a = new LinkedListDeque<String>();
+        a.addLast("a");
+        a.addLast("b");
+        a.addLast("c");
 
+        ArrayDeque<String> o = new ArrayDeque<String>();
+        o.addLast("a");
+        o.addLast("b");
+        o.addLast("c");
 
-        Integer a1 = a.get(12);
+        /*boolean b = o.equals(a);
+
+        Integer a1 = a.getRecursive(5);
         Integer a2 = a.removeFirst();
-        Integer a3 = a.removeLast();
-        Integer a4 = a.removeLast();
-        Integer a5 = a.removeLast();
-        Integer a6 = a.removeLast();
-        Integer a7 = a.removeLast();
+        for (int x : a) {
+            System.out.print(x);
+        }*/
 
-        a.printDeque();
+        /*a.printDeque();*/
+        MaxArrayDeque.NameComparator comp = new MaxArrayDeque.NameComparator();
+        MaxArrayDeque<Integer> c = new MaxArrayDeque<Integer>(comp);
+        c.addLast(122);
+        c.addLast(2);
+        c.addLast(3);
+        Integer c_max= c.max();
+
+
     }
 }

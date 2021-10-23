@@ -28,7 +28,9 @@ public class TTFAF {
         // player.play();
     }
 
-    private static final String TTFAF =
+    private static final String TTFAF = "";
+
+    /** private static final String TTFAF =
         "H4sICO8zfloCA1RURkFGaW1wcm92ZWQyLm1pZAC1fe1uI0mSWNze2mf4CQwMGhIamu7WSqfRtEYi"
         + "WSyyqljFYpGlUlFsbmsGjb27BXbhPdz5Dljbv7ebvcbtD8Mg7BfZR/Cj7IsY48qMiMyM+hLV3fOP"
         + "lREZmRkZERkZkZkstr/7DQD8e/gr+NlfQbH9/T9VXz78eP/XP/8/f4Eff/jZ/wP48a+Ptr/7/b/+"
@@ -183,5 +185,5 @@ public class TTFAF {
         + "g96sQ75u3LONyQzWMzhawtkSD6ngsUV6zEu91HMHZ3doPxBEb1sXIzi6h7N7NEsIsm+yMMGcQfR4"
         + "YmW9jm7h7LZBcAqVUWwnOIK8aquEs7JOUD/zY0ArBk31oy1YvqODmDv95xTT7/6IMd58BSczuKTD"
         + "8wUeQqcz27kPJxu43Hxw06TZAE7u4PLOParlZEg8gv6CqnAAZQmXyw9nVEgRopMcLnNTqKj9wwb0"
-        + "6zR/5Bb/AT7+4c9/APjxG/j/XQ2yXpqSAA==";
+        + "6zR/5Bb/AT7+4c9/APjxG/j/XQ2yXpqSAA=="; */
 }

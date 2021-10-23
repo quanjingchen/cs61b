@@ -1,7 +1,9 @@
 package deque;
 
+import java.util.Iterator;
+
 /** Array based deque. */
-public class ArrayDeque<Bibimbap> {
+public class ArrayDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibimbap> {
     private Bibimbap[] items;
     private int size;
     private int first;
@@ -27,6 +29,7 @@ public class ArrayDeque<Bibimbap> {
     }
 
     /** Adds x to the front of the list. */
+    @Override
     public void addFirst(Bibimbap x) {
         if (size == items.length) {
             resize(size * 2);
@@ -43,6 +46,7 @@ public class ArrayDeque<Bibimbap> {
     }
 
     /** Adds x to the end of the list. */
+    @Override
     public void addLast(Bibimbap x) {
         if (size == items.length) {
             resize(size * 2);
@@ -57,17 +61,15 @@ public class ArrayDeque<Bibimbap> {
         size += 1;
     }
 
-    /** determine if deque is empty. */
-    public boolean isEmpty() {
-        return size == 0;
-    }
 
     /** return the size of the list. */
+    @Override
     public int size() {
         return size;
     }
 
     /** Removes and returns the item at the front of the deque. */
+    @Override
     public Bibimbap removeFirst() {
 
         if (size == 0) {
@@ -89,6 +91,7 @@ public class ArrayDeque<Bibimbap> {
     }
 
     /** Removes and returns the item at the back of the deque. */
+    @Override
     public Bibimbap removeLast() {
         if (size == 0) {
             return null;
@@ -111,6 +114,7 @@ public class ArrayDeque<Bibimbap> {
 
 
     /** Gets the item at the given index, where 0 is the front, 1 is the next item. */
+    @Override
     public Bibimbap get(int index) {
         if (size == 0 || (index > size - 1)) {
             return null;
@@ -124,6 +128,7 @@ public class ArrayDeque<Bibimbap> {
     }
 
     /** Prints the items in the deque from first to last, separated by a space. */
+    @Override
     public void printDeque() {
         int x = 0;
         while (x < size) {
@@ -133,4 +138,43 @@ public class ArrayDeque<Bibimbap> {
         }
         System.out.println();
     }
+
+    /** The Deque objects we’ll make are iterable. */
+    public Iterator<Bibimbap> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<Bibimbap> {
+        private int wizPos;
+
+        public ArrayDequeIterator() {
+            wizPos = 0;
+        }
+
+        public boolean hasNext() {
+            return wizPos < size;
+        }
+
+        public Bibimbap next() {
+            Bibimbap returnItem = get(wizPos);
+            wizPos += 1;
+            return returnItem;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) { return false; }
+        if (this == o) { return true; };
+        if (!(o instanceof Deque)) { return false; }
+        Deque<Bibimbap> other = (Deque<Bibimbap>) o;
+        if (this.size() != other.size()) { return false; }
+        for (int index = 0; index < size; index ++) {
+            if (this.get(index) != other.get(index)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
