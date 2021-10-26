@@ -35,10 +35,10 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
             resize(size * 2);
         }
 
-        if ( items[first] != null & first > 0) {
+        if (items[first] != null & first > 0) {
             first -= 1;
         } else if (items[first] != null & first == 0) {
-            first = items.length-1;
+            first = items.length - 1;
         }
         items[first] = x;
         size += 1;
@@ -97,8 +97,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T x = items[last];
         items[last] = null;
         size -= 1;
-        if (items.length > 8 & size < items.length/4) {
-            resize(items.length/2);
+        if (items.length > 8 & size < items.length / 4) {
+            resize(items.length / 2);
         } else if (last != first & last > 0) {
             last -= 1;
         } else if (last != first & last == 0) {
@@ -160,8 +160,12 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) { return false; }
-        if (this == o) { return true; };
+        if (o == null) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        };
         if (!(o instanceof Deque)) {
             return false;
         }

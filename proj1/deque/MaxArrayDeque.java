@@ -1,4 +1,5 @@
 package deque;
+import java.util.Comparator;
 
 public class MaxArrayDeque<T> extends ArrayDeque<T>{
 
@@ -18,14 +19,14 @@ public class MaxArrayDeque<T> extends ArrayDeque<T>{
         if (size() == 0) {
             return null;
         }
-        T MaxElement =get(0);
-        for (int i = 0; i < size(); i ++) {
+        T maxElement = get(0);
+        for (int i = 0; i < size(); i++) {
             T curr = get(i);
-            if (c.compare(curr,MaxElement) > 0) {
-                MaxElement = curr;
+            if (c.compare(curr,maxElement) > 0) {
+                maxElement = curr;
             }
         }
-        return MaxElement;
+        return maxElement;
     }
 
     public static class NameComparator<T> implements Comparator<T> {

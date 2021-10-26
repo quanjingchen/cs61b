@@ -164,6 +164,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
             return false;
         }
         Deque<T> other = (Deque<T>) o;
+
         if (this.size() != other.size()) {
             return false;
         }
