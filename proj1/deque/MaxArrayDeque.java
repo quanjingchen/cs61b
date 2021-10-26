@@ -1,36 +1,36 @@
 package deque;
 
-public class MaxArrayDeque<Bibimbap> extends ArrayDeque<Bibimbap>{
+public class MaxArrayDeque<T> extends ArrayDeque<T>{
 
-    private Comparator<Bibimbap> comp;
+    private Comparator<T> comp;
 
-    public MaxArrayDeque(Comparator<Bibimbap> c) {
+    public MaxArrayDeque(Comparator<T> c) {
 
         comp = c;
     }
 
 
-    public Bibimbap max() {
+    public T max() {
         return max(comp);
     }
 
-    public Bibimbap max(Comparator<Bibimbap> c) {
+    public T max(Comparator<T> c) {
         if (size() == 0) {
             return null;
         }
-        Bibimbap max_element =get(0);
+        T MaxElement =get(0);
         for (int i = 0; i < size(); i ++) {
-            Bibimbap curr_element =get(i);
-            if (c.compare(curr_element,max_element) > 0) {
-                max_element = curr_element;
+            T curr = get(i);
+            if (c.compare(curr,MaxElement) > 0) {
+                MaxElement = curr;
             }
         }
-        return max_element;
+        return MaxElement;
     }
 
-    public static class NameComparator<Bibimbap> implements Comparator<Bibimbap> {
+    public static class NameComparator<T> implements Comparator<T> {
         @Override
-        public int compare(Bibimbap o1, Bibimbap o2) {
+        public int compare(T o1, T o2) {
                 return o1.toString().compareTo(o2.toString());
         }
     }

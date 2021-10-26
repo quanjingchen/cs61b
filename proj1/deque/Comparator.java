@@ -1,5 +1,5 @@
 package deque;
 
-public interface Comparator<Bibimbap> {
-    public int compare(Bibimbap o1, Bibimbap o2);
+public interface Comparator<T> {
+    public int compare(T o1, T o2);
 }

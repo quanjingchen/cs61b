@@ -3,14 +3,14 @@ package deque;
 import java.util.Iterator;
 
 /** Circular Doubly Linked List. */
-public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibimbap> {
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
 
     private class Node {
-        public Bibimbap item;
-        public Node next;
-        public Node prev;
+        private T item;
+        private Node next;
+        private Node prev;
 
-        public Node(Bibimbap i, Node p, Node n) {
+        public Node(T i, Node p, Node n) {
             item = i;
             prev = p;
             next = n;
@@ -27,7 +27,7 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
         size = 0;
     }
 
-    public LinkedListDeque(Bibimbap x) {
+    public LinkedListDeque(T x) {
         sentinel = new Node(null, null, null);
         sentinel.prev = sentinel.next = new Node(x, sentinel, sentinel);
         size = 1;
@@ -35,7 +35,7 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
     /** Adds x to the front of the list. */
     @Override
-    public void addFirst(Bibimbap x) {
+    public void addFirst(T x) {
         sentinel.next = new Node(x, sentinel, sentinel.next);
         sentinel.next.next.prev = sentinel.next;
         size += 1;
@@ -43,7 +43,7 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
     /** Adds x to the end of the list. */
     @Override
-    public void addLast(Bibimbap x) {
+    public void addLast(T x) {
         sentinel.prev = new Node(x, sentinel.prev, sentinel);
         sentinel.prev.prev.next =  sentinel.prev;
         size += 1;
@@ -58,11 +58,11 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
     /** Removes and returns the item at the front of the deque. */
     @Override
-    public Bibimbap removeFirst() {
+    public T removeFirst() {
         if (size == 0) {
             return null;
         }
-        Bibimbap x =  sentinel.next.item;
+        T x =  sentinel.next.item;
         sentinel.next = sentinel.next.next;
         sentinel.next.prev = sentinel;
         size -= 1;
@@ -71,11 +71,11 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
     /** Removes and returns the item at the back of the deque. */
     @Override
-    public Bibimbap removeLast() {
+    public T removeLast() {
         if (size == 0) {
             return null;
         }
-        Bibimbap x = sentinel.prev.item;
+        T x = sentinel.prev.item;
         sentinel.prev = sentinel.prev.prev;
         sentinel.prev.next = sentinel;
         size -= 1;
@@ -84,7 +84,7 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
     /** Gets the item at the given index, where 0 is the front, 1 is the next item. */
     @Override
-    public Bibimbap get(int index) {
+    public T get(int index) {
         if (size == 0 || index > size - 1) {
             return null;
         }
@@ -92,26 +92,26 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
         Node current = sentinel;
         while (current.next != sentinel && x <= index) {
             current = current.next;
-            x ++;
+            x++;
         }
         return current.item;
     }
 
     /** Same as get, but uses recursion. */
-    public Bibimbap getRecursive(int index) {
+    public T getRecursive(int index) {
         if (size == 0 || index > size - 1) {
             return null;
         }
-        return getRecursive_help(index).item;
+        return getRecursiveHelp(index).item;
     }
 
-    public Node getRecursive_help(int index) {
+    public Node getRecursiveHelp(int index) {
 
         if (index == 0) {
             return sentinel.next;
         }
         if (index > 0) {
-            return getRecursive_help(index - 1).next;
+            return getRecursiveHelp(index - 1).next;
         }
         return null;
     }
@@ -130,11 +130,11 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
 
     /** The Deque objects we’ll make are iterable. */
-    public Iterator<Bibimbap> iterator() {
+    public Iterator<T> iterator() {
         return new LinkedListDeque.LLDIterator();
     }
 
-    private class LLDIterator implements Iterator<Bibimbap> {
+    private class LLDIterator implements Iterator<T> {
         private int wizPos;
 
         public LLDIterator() {
@@ -145,8 +145,8 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
             return wizPos < size;
         }
 
-        public Bibimbap next() {
-            Bibimbap returnItem = get(wizPos);
+        public T next() {
+            T returnItem = get(wizPos);
             wizPos += 1;
             return returnItem;
         }
@@ -154,12 +154,20 @@ public class LinkedListDeque<Bibimbap> implements Deque<Bibimbap>, Iterable<Bibi
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) { return false; }
-        if (this == o) { return true; };
-        if (!(o instanceof Deque)) { return false; }
-        Deque<Bibimbap> other = (Deque<Bibimbap>) o;
-        if (this.size() != other.size()) { return false; }
-        for (int index = 0; index < size; index ++) {
+        if (o == null) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        };
+        if (!(o instanceof Deque)) {
+            return false;
+        }
+        Deque<T> other = (Deque<T>) o;
+        if (this.size() != other.size()) {
+            return false;
+        }
+        for (int index = 0; index < size; index++) {
             if (this.get(index) != other.get(index)) {
                 return false;
             }
