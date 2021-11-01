@@ -1,7 +1,7 @@
 package deque;
 import java.util.Comparator;
 
-public class MaxArrayDeque<T> extends ArrayDeque<T>{
+public class MaxArrayDeque<T> extends ArrayDeque<T> {
 
     private Comparator<T> comp;
 
@@ -22,17 +22,17 @@ public class MaxArrayDeque<T> extends ArrayDeque<T>{
         T maxElement = get(0);
         for (int i = 0; i < size(); i++) {
             T curr = get(i);
-            if (c.compare(curr,maxElement) > 0) {
+            if (c.compare(curr, maxElement) > 0) {
                 maxElement = curr;
             }
         }
         return maxElement;
     }
 
-    public static class NameComparator<T> implements Comparator<T> {
+    private static class NameComparator<T> implements Comparator<T> {
         @Override
         public int compare(T o1, T o2) {
-                return o1.toString().compareTo(o2.toString());
+            return o1.toString().compareTo(o2.toString());
         }
     }
 

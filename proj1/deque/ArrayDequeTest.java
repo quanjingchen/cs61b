@@ -122,6 +122,46 @@ public class ArrayDequeTest {
             assertEquals("Should have the same value", i, (double) lld1.removeLast(), 0.0);
         }
 
+    }
+
+    @Test
+    public void FillAgainDequeTest() {
+
+        ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
+        for (int i = 0; i < 10; i++) {
+            lld1.addFirst(i);
+        }
+
+        for (int i = 9; i > -1; i--) {
+            assertEquals("Should have the same value", i, lld1.removeFirst(), 0.0);
+        }
+
+    }
+
+
+    @Test
+    public void GetTest() {
+
+        ArrayDeque<Integer> lld1 = new ArrayDeque<Integer>();
+        lld1.addLast(0);
+        lld1.addFirst(1);
+        lld1.addLast(2);
+        lld1.addLast(3);
+        lld1.addLast(4);
+        lld1.get(2);
+        lld1.addFirst(6);
+        lld1.addFirst(7);
+        lld1.addLast(8);
+        lld1.addFirst(9);
+        lld1.removeFirst();
+        lld1.removeLast();
+        lld1.get(5);
+        lld1.get(2);
+        lld1.removeFirst();
+        lld1.removeFirst();
+        lld1.removeFirst();
+        lld1.removeFirst();
+        int a = lld1.removeLast();
 
     }
 }

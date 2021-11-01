@@ -77,6 +77,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[first] = null;
         size -= 1;
         if (items.length > 8 & size < items.length / 4) {
+            first += 1;
             resize(items.length / 2);
         } else if (last == first) {
             return x;
@@ -143,7 +144,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private class ArrayDequeIterator implements Iterator<T> {
         private int wizPos;
 
-        public ArrayDequeIterator() {
+        ArrayDequeIterator() {
             wizPos = 0;
         }
 
@@ -163,16 +164,22 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         if (o == null) {
             return false;
         }
+
+        /* do they refer to the same object? */
         if (this == o) {
             return true;
         };
+
         if (!(o instanceof Deque)) {
             return false;
         }
+
         Deque<T> other = (Deque<T>) o;
+
         if (this.size() != other.size()) {
             return false;
         }
+
         for (int index = 0; index < size; index++) {
             if (this.get(index) != other.get(index)) {
                 return false;
