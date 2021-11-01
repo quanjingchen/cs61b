@@ -27,12 +27,6 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         size = 0;
     }
 
-    public LinkedListDeque(T x) {
-        sentinel = new Node(null, null, null);
-        sentinel.prev = sentinel.next = new Node(x, sentinel, sentinel);
-        size = 1;
-    }
-
     /** Adds x to the front of the list. */
     @Override
     public void addFirst(T x) {
@@ -161,7 +155,7 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         /* do they refer to the same object? */
         if (this == o) {
             return true;
-        };
+        }
 
         if (!(o instanceof Deque)) {
             return false;

@@ -168,7 +168,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         /* do they refer to the same object? */
         if (this == o) {
             return true;
-        };
+        }
 
         if (!(o instanceof Deque)) {
             return false;

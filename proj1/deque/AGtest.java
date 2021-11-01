@@ -1,6 +1,5 @@
 package deque;
 
-import gh2.GuitarString;
 
 public class AGtest {
     public static void main(String[] args) {

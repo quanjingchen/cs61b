@@ -6,12 +6,12 @@ public class GuitarHero {
     public static void main(String[] args) {
 
         // create guitar strings, for 37 keys
-        double ConcertA = 440.0;
+        double concertA = 440.0;
         //setup the keyboard
         String keyboard = "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";
         GuitarString[] strings = new GuitarString[37];
         for (int i = 0; i < 37; i++) {
-            double frequency = ConcertA * Math.pow(2, (i - 24) / 12.);
+            double frequency = concertA * Math.pow(2, (i - 24) / 12.);
             System.out.println(frequency);
             strings[i] = new GuitarString(frequency);
         }
