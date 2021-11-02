@@ -127,12 +127,11 @@ public class LinkedListDequeTest {
     @Test
     public void equalDequeTest() {
         /* create a deque linked list */
-        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>(3);
+        LinkedListDeque<Integer> lld1 = new LinkedListDeque<Integer>();
         lld1.addFirst(2);
         lld1.addFirst(1);
         /* create a deque linked list */
         ArrayDeque<Integer> lld2 = new ArrayDeque<Integer>();
-        lld2.addFirst(3);
         lld2.addFirst(2);
         lld2.addFirst(1);
         /* create a deque linked list */
