@@ -141,16 +141,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         return min(x.left);
     }
 
-    public void deleteMin() {
-        root = deleteMin(root);
-    }
 
-    private BSTNode deleteMin(BSTNode x) {
-        if (x.left == null) return x.right;
-        x.left = deleteMin(x.left);
-        x.size = size(x.left) + size(x.right) + 1;
-        return x;
-    }
 
     public void printInOrder() {
 
