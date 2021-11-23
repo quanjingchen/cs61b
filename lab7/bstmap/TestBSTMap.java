@@ -87,4 +87,17 @@ public class TestBSTMap {
         assertTrue(b.containsKey("hi"));
     }
 
+
+    //assumes put works
+    @Test
+    public void minTest() {
+        BSTMap<Integer, Integer> b = new BSTMap<Integer, Integer>();
+        b.put(3, 99);
+        b.put(1, 99);
+        b.put(2, 99);
+        b.deleteMin();
+        int i = b.min();
+        assertEquals(1, i);
+    }
+
 }
