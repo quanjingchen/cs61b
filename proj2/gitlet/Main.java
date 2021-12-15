@@ -10,7 +10,7 @@ public class Main {
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Must have at least one argument");
             System.exit(0);
@@ -18,10 +18,18 @@ public class Main {
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
-                Repository.init();
+                try {
+                    Repository.init();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case "add":
-                Repository.add(args[1]);
+                try {
+                    Repository.add(args[1]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
             case "commit":
                 if (args.length == 1) {
@@ -36,14 +44,26 @@ public class Main {
                 } else {
                     String secondArg = args[1];
                     if (secondArg.equals("--")) {
-                        Repository.checkoutHead(args[2]);
+                        try {
+                            Repository.checkoutHead(args[2]);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        Repository.checkoutFile(args[1], args[3]);
+                        try {
+                            Repository.checkoutFile(args[1], args[3]);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
                 break;
             case "log":
-                Repository.log();
+                try {
+                    Repository.log();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 break;
 
 
