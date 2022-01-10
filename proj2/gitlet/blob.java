@@ -23,7 +23,7 @@ public class blob implements Serializable {
         this.FileName = fileName;
         File inFile = new File(CWD, fileName);
         if (!inFile.exists()) {
-            System.out.println("file does not exits");
+            System.out.println("file does not exist");
             System.exit(0);
         }
         this.FileContent = Utils.readContentsAsString(inFile);
@@ -39,21 +39,23 @@ public class blob implements Serializable {
     /** Save a commit to object folder */
     public void saveBlob() {
         File outFile = new File(Objects_FOLDER, getSHA1());
-        Utils.writeObject(outFile, this);
+        if (!outFile.exists()) {
+            Utils.writeObject(outFile, this);
+        }
     }
 
     /** Read a commit from object folder */
     public static blob readBlob(String name) {
         File inFile = new File(Objects_FOLDER, name);
         if (!inFile.exists()) {
-            System.out.println("Blob does not exits");
+            System.out.println("Blob does not exist");
             System.exit(0);
         }
         blob b = Utils.readObject(inFile, blob.class);
         return b;
     }
 
-    /** Save a commit to object folder */
+    /** Write a commit back to working directory */
     public void WriteBlobToFile() throws IOException {
         File newFile = new File(CWD, FileName);
         if (newFile.exists()) {

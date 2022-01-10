@@ -1,7 +1,8 @@
 package gitlet;
 import java.io.File;
 import java.io.Serializable;
-import java.util.Date;
+import java.util.*;
+
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
@@ -23,21 +24,25 @@ public class Commit implements Serializable {
     private String Message;
     private String Timestamp;
     private String Parent;
+    private String SecondParent;
     private String Tree;
 
 
     public Commit() {
-        this.Message = "initial commit";
-        this.Parent = null;
-        this.Tree = null;
+        this("initial commit", null, null);
         Date date = new Date(0);
         // display time and date
         String str = String.format("%ta %<tb %<td %<tT %<tY %<tz", date);
         this.Timestamp = str;
     }
     public Commit(String message, String parent, String tree) {
+        this(message, parent, null, tree);
+    }
+
+    public Commit(String message, String parent, String secondParent, String tree) {
         this.Message = message;
         this.Parent = parent;
+        this.SecondParent = secondParent;
         this.Tree = tree;
         Date date = new Date();
         // display time and date
@@ -61,10 +66,28 @@ public class Commit implements Serializable {
         }
     }
 
-    /** get GitTree of the commit */
+    public Map<String, String> getTable() {
+        if (Tree != null) {
+            GitTree gitTree = getGitTree();
+            return gitTree.getTable();
+        } else {
+            return new TreeMap<>();
+        }
+    }
+
+    /** get parent of the commit */
     public String getParent() {
         if (Parent != null) {
             return Parent;
+        } else {
+            return null;
+        }
+    }
+
+    /** get message of the commit */
+    public String getMessage() {
+        if (Message != null) {
+            return Message;
         } else {
             return null;
         }
@@ -79,21 +102,35 @@ public class Commit implements Serializable {
 
     /** Read a commit from object folder */
     public static Commit readCommit(String name) {
+        // get all commits in the Commits_FOLDER
+        List<String> CommitNames = Utils.plainFilenamesIn(Commits_FOLDER);
+        if (name.length() < 40) {
+            for (String CommitName : CommitNames) {
+                String tmp = CommitName.substring(0, name.length());
+                if (tmp.equals(name)) {
+                    name = CommitName;
+                    break;
+                }
+            }
+        }
         File inFile = new File(Commits_FOLDER, name);
         if (!inFile.exists()) {
-            System.out.println("Commit does not exits");
+            System.out.println("No commit with that id exists.");
             System.exit(0);
         }
         Commit c = Utils.readObject(inFile, Commit.class);
         return c;
     }
 
-    /** to String */
+    /** convert commit to String */
     @Override
     public String toString() {
-        return String.format("===\ncommit %s\nDate: %s\n%s\n\n", getSHA1(), Timestamp, Message);
+        if (SecondParent == null) {
+            return String.format("===\ncommit %s\nDate: %s\n%s\n\n", getSHA1(), Timestamp, Message);
+        } else {
+            return String.format("===\ncommit %s\nMerge: %s %s \nDate: %s\n%s\n\n", getSHA1(), Parent.substring(0, 7), SecondParent.substring(0, 7), Timestamp, Message);
+        }
     }
-
 
 
 }
