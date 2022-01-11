@@ -225,9 +225,8 @@ public class Repository {
             System.exit(0);
         }
         branchFile.createNewFile();
-        // reset the active branch
+        // points it at the current head commit but DON'T immediately switch to the newly created branch
         String ActiveBranch = "refs/" + branchName;
-        Utils.writeContents(ActiveBranchFile, ActiveBranch);
         File headPath = new File(GITLET_DIR, ActiveBranch);
         Utils.writeContents(headPath, HeadCommitSha1);
     }
