@@ -598,7 +598,7 @@ public class Repository {
         }
         return splitIndex;
     }
-    /** get intersection of two sets */
+    /** check if stage and trash are clear */
     public static void checkClear() {
         if (STAGE.exists() || TRASH.exists()) {
             System.out.println("You have uncommitted changes.");
@@ -626,9 +626,9 @@ public class Repository {
                 System.out.println("Two files must have the same file names.");
                 System.exit(0);
             }
-            tmp = "<<<<<<< HEAD\n" + fileC + "=======\n" + fileB + ">>>>>>>";
+            tmp = "<<<<<<< HEAD\n" + fileC + "\n=======\n" + fileB + ">>>>>>>";
         } else {
-            tmp = "<<<<<<< HEAD\n" + fileC + "=======\n" + ">>>>>>>";
+            tmp = "<<<<<<< HEAD\n" + fileC + "\n=======\n" + ">>>>>>>";
         }
         File newFile = new File(CWD, fileBlobC.getFileName());
         newFile.createNewFile();
