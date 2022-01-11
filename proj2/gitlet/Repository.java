@@ -479,172 +479,134 @@ public class Repository {
     }
 
     /** Merges files from the given branch into the current branch. */
-    public static void merge(String bN) throws IOException {
-        if (STAGE.exists() || TRASH.exists()) {
-            System.out.println("You have uncommitted changes.");
-            System.exit(0);
-        }
-        // get the current active branch name
+    public static void merge(String branchName) throws IOException {
+        checkClear();
         String activeBranchPath = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
         String activeBranch = activeBranchPath.substring(5, activeBranchPath.length());
-        // can't merge a branch with itself.
-        if (bN.equals(activeBranch)) {
+        if (branchName.equals(activeBranch)) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
-
-        // No such branch exists.
-        File branchHeadPath = join(BRANCH_FOLDER, bN);
+        File branchHeadPath = join(BRANCH_FOLDER, branchName);
         if (!branchHeadPath.exists()) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
-        // get the commit of the current branch.
         Commit C = Commit.readCommit(getheadcommitSha1());
         Map<String, String> fileTableC = C.getTable();
         Set<String> ckeySet = fileTableC.keySet();
-        // get the ancestors of the current branch.
         List<String> cAncestor = getCommitAncestor(C);
-        // get the commit of the given branch.
-        Commit B = Commit.readCommit(getBranchheadcommitSha1(bN));
+        Commit B = Commit.readCommit(getBranchheadcommitSha1(branchName));
         Map<String, String> fileTableB = B.getTable();
         Set<String> bkeySet = fileTableB.keySet();
-        // get the ancestors of the given branch.
         List<String> bAncestor = getCommitAncestor(B);
+        int splitIndex = getSplitPoint(cAncestor, bAncestor, branchName);
+        Commit S = Commit.readCommit(cAncestor.get(cAncestor.size() - splitIndex));
+        Map<String, String> fileTableS = S.getTable();
+        Set<String> skeySet = fileTableS.keySet();
+        Set<String> uni3 = union3(skeySet, ckeySet, bkeySet);
+        Set<String> inter3 = inter3(skeySet, ckeySet, bkeySet);
+        Set<String> interSc = inter2(skeySet, ckeySet);
+        Set<String> interSb = inter2(skeySet, bkeySet);
+        Set<String> interCb = inter2(ckeySet, bkeySet);
+        List<String> fileNames = Utils.plainfileNamesIn(CWD);
+        Set<String> cwdSet = new HashSet<>(fileNames);
+        Set<String> interBcwd = inter2(cwdSet, bkeySet);
+        interBcwd.removeAll(ckeySet);
+        for (String file : interBcwd) {
+            if (!skeySet.contains(file) || (skeySet.contains(file)
+                    & !fileTableS.get(file).equals(fileTableB.get(file)))) {
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        for (String file : uni3) {
+            if (inter3.contains(file)) {
+                if (fileTableS.get(file).equals(fileTableC.get(file))
+                        & !fileTableS.get(file).equals(fileTableB.get(file))) {
+                    checkoutFile(B.getSHA1(), file);
+                    add(file);
+                }
+                if (!fileTableS.get(file).equals(fileTableC.get(file))
+                        & !fileTableS.get(file).equals(fileTableB.get(file))
+                        & !fileTableC.get(file).equals(fileTableB.get(file))) {
+                    mergeHelper(fileTableC.get(file), fileTableB.get(file));
+                    add(file);
+                }
+            } else if (interSc.contains(file)) {
+                if (fileTableS.get(file).equals(fileTableC.get(file))) {
+                    rm(file);
+                } else {
+                    mergeHelper(fileTableC.get(file));
+                }
+            } else if (interSb.contains(file)) {
+                if (!fileTableS.get(file).equals(fileTableB.get(file))) {
+                    mergeHelper(fileTableC.get(file));
+                }
+            } else if (interCb.contains(file)) {
+                if (!fileTableC.get(file).equals(fileTableB.get(file))) {
+                    mergeHelper(fileTableC.get(file), fileTableB.get(file));
+                }
+            } else if (bkeySet.contains(file)) {
+                checkoutFile(B.getSHA1(), file);
+                add(file);
+            }
+        }
+        String msg = "Merged " + branchName + " into " + activeBranch + ".";
+        commit(msg, getBranchheadcommitSha1(branchName));
+    }
+    /** get union of three sets */
+    public static Set union3(Set set1, Set set2, Set set3) {
+        Set uni3 = new HashSet();
+        uni3.addAll(set1);
+        uni3.addAll(set2);
+        uni3.addAll(set3);
+        return uni3;
+    }
 
-        // get the split point
+    /** get intersection of three sets */
+    public static Set inter3(Set set1, Set set2, Set set3) {
+        Set inter3 = new HashSet<>(set1);
+        inter3.retainAll(set2);
+        inter3.retainAll(set3);
+        return inter3;
+    }
+
+    /** get intersection of two sets */
+    public static Set inter2(Set set1, Set set2) {
+        Set inter2 = new HashSet<>(set1);
+        inter2.retainAll(set2);
+        return inter2;
+    }
+    /** get split point */
+    public static int getSplitPoint(List list1, List list2, String branchName) throws IOException {
         int splitIndex = 0;
-        for (int i = 1; i <= Math.min(cAncestor.size(), bAncestor.size()); i++) {
-            if (!cAncestor.get(cAncestor.size() - i).equals(bAncestor.get(bAncestor.size() - i))) {
+        for (int i = 1; i <= Math.min(list1.size(), list2.size()); i++) {
+            if (!list1.get(list1.size() - i).equals(list2.get(list2.size() - i))) {
                 break;
             }
             splitIndex++;
         }
-        if (splitIndex == bAncestor.size()) {
-            // If the split point is the same commit as the give branch,
-            // then we do nothing
+        if (splitIndex == list2.size()) {
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
-        } else if (splitIndex == cAncestor.size()) {
-            //If the split point is the current branch,
-            // then check out the given branch
-            checkoutBranch(bN);
+        } else if (splitIndex == list1.size()) {
+            checkoutBranch(branchName);
             System.out.println("Current branch fast-forwarded.");
             System.exit(0);
         }
-        // get the commit at the split point
-        Commit S = Commit.readCommit(cAncestor.get(cAncestor.size() - splitIndex));
-        Map<String, String> fileTableS = S.getTable();
-        Set<String> skeySet = fileTableS.keySet();
-        // get the union of the three key sets
-        Set<String> uni3 = new HashSet<String>();
-        uni3.addAll(skeySet);
-        uni3.addAll(ckeySet);
-        uni3.addAll(bkeySet);
-        // get the intersection of the three key sets.
-        Set<String> inter3 = new HashSet<>(skeySet);
-        inter3.retainAll(ckeySet);
-        inter3.retainAll(bkeySet);
-        // get the intersection of S and C.
-        Set<String> interSc = new HashSet<>(skeySet);
-        interSc.retainAll(ckeySet);
-        // get the intersection of S and B.
-        Set<String> interSb = new HashSet<>(skeySet);
-        interSb.retainAll(bkeySet);
-        // get the intersection of S and C.
-        Set<String> interCb = new HashSet<>(ckeySet);
-        interCb.retainAll(bkeySet);
-
-        // check if an untracked file in the current commit would be overwritten by the merge.
-        // before doing anything else.
-        List<String> fileNames = Utils.plainfileNamesIn(CWD);
-        Set<String> cwdSet = new HashSet<>(fileNames);
-        // get the intersection of the CWD and Bkey sets.
-        Set<String> interBcwd = new HashSet<>(cwdSet);
-        interBcwd.retainAll(bkeySet);
-        // exclude files in Ckey set.
-        interBcwd.removeAll(ckeySet);
-        if (!interBcwd.isEmpty()) {
-            for (String file : interBcwd) {
-                if (!skeySet.contains(file) || (skeySet.contains(file)
-                        & !fileTableS.get(file).equals(fileTableB.get(file)))) {
-                    System.out.println("There is an untracked file in the way; "
-                            + "delete it, or add and commit it first.");
-                    System.exit(0);
-                }
-            }
-        }
-
-
-        // iterate over files
-        for (String file : uni3) {
-            // if file is tracked in all the three sets.
-            if (inter3.contains(file)) {
-
-                // 1) S = C != B : check B and stage
-                if (fileTableS.get(file).equals(fileTableC.get(file))
-                        & !fileTableS.get(file).equals(fileTableB.get(file))) {
-                    // Any files that have been modified in the given branch (B)
-                    // since the split point,
-                    // but not modified in the current branch (C) since the split point
-                    // should be changed to their versions in the given branch (B)
-                    // (checked out from the commit at the front of the given branch).
-                    checkoutFile(B.getSHA1(), file);
-                    add(file);
-                }
-                // 2) S = B != C : stay
-                // 3) S != B = C : stay
-                // 4) S != C != B : conflict
-                if (!fileTableS.get(file).equals(fileTableC.get(file))
-                        & !fileTableS.get(file).equals(fileTableB.get(file))
-                        & !fileTableC.get(file).equals(fileTableB.get(file))) {
-                     // Any files modified in different ways in the current
-                    // and given branches are in conflict.
-                    // replace the contents of the conflicted file and stage the result.
-                    mergeHelper(fileTableC.get(file), fileTableB.get(file));
-                    add(file);
-                }
-
-            } else if (interSc.contains(file)) {
-                if (fileTableS.get(file).equals(fileTableC.get(file))) {
-                    // 5) S = C !B : remove and untrack
-                    // Any files present at the split point,
-                    // unmodified in the current branch,
-                    // and absent in the given branch should be removed (and untracked).
-                    rm(file);
-                } else {
-                    // 6) S != C !B : conflict
-                    mergeHelper(fileTableC.get(file));
-                }
-
-            } else if (interSb.contains(file)) {
-                // 7) S = B !C : remain
-                // 8) S != B !C : conflict
-                if (!fileTableS.get(file).equals(fileTableB.get(file))) {
-                    mergeHelper(fileTableC.get(file));
-                }
-
-            } else if (interCb.contains(file)) {
-                // 9)  !S C = B : remain
-                // 10) !S C != B : conflict
-                if (!fileTableC.get(file).equals(fileTableB.get(file))) {
-                    // If the file was absent at the split point
-                    // and has different contents in the given and current branches,
-                    // replace the contents of the conflicted file and stage the result.
-                    mergeHelper(fileTableC.get(file), fileTableB.get(file));
-                }
-
-                // 11) !S C !B : remain
-                // 12) !S !C B : check and stage
-            } else if (bkeySet.contains(file)) {
-                checkoutFile(B.getSHA1(), file);
-                add(file);
-                // 13) S !C !B : remain
-            }
-        }
-        String msg = "Merged " + bN + " into " + activeBranch + ".";
-        commit(msg, getBranchheadcommitSha1(bN));
+        return splitIndex;
     }
+    /** get intersection of two sets */
+    public static void checkClear() {
+        if (STAGE.exists() || TRASH.exists()) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+    }
+
+
 
     /** merge one txt files with an empty file and save to the working directory */
     public static void mergeHelper(String fileName1) throws IOException {
