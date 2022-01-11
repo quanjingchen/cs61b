@@ -81,16 +81,16 @@ public class Repository {
         Map<String, String> fileTable = getHeadCommitFileTable();
         // build the staging area.
         Map<String, String> stageTable = buildStage();
+        Map<String, String> trashTable = buildTrash();
+        // If the file is added it will no longer be staged for removal.
+        trashTable.remove(fileName);
+        Utils.writeObject(trash, new GitTree(trashTable));
         // If the current working version of the file is not added
         // and is not identical to the version in the current commit,
         // stage it and remove it from trash if it's there.
-        if ((!(stageTable.containsValue(newFile.getSHA1()))) & (!(fileTable.containsValue(newFile.getSHA1())))) {
+        if (!(stageTable.containsValue(newFile.getSHA1())) & !(fileTable.containsValue(newFile.getSHA1()))) {
             stageTable.put(fileName, newFile.getSHA1());
             newFile.saveBlob();
-            // If the file is added it will no longer be staged for removal.
-            Map<String, String> trashTable = buildTrash();
-            trashTable.remove(fileName);
-            Utils.writeObject(trash, new GitTree(trashTable));
         }
         // If the current working version of the file is identical to the version in the current commit,
         // do not stage it to be added, and remove it from the staging area if it is already there
@@ -457,7 +457,7 @@ public class Repository {
             }
         }
         System.out.println("\n=== Modifications Not Staged For Commit ===");
-        System.out.println("\n=== Untracked Files ===");
+        System.out.println("\n=== Untracked Files ===\n");
     }
 
     /** Merges files from the given branch into the current branch. */

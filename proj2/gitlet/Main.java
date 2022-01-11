@@ -50,7 +50,7 @@ public class Main {
             case "commit":
                 initError();
                 incorrectError(args.length, 1);
-                if (args.length == 1) {
+                if (args[1] == null) {
                     System.out.println("Please enter a commit message.");
                     System.exit(0);
                 }
@@ -176,7 +176,7 @@ public class Main {
                 System.out.println("No command with that name exists.");
         }
     }
-    
+
     public static void initError() {
         File CWD = new File(System.getProperty("user.dir"));
         /** The .gitlet directory. */
