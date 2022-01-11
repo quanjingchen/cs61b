@@ -7,7 +7,6 @@ import java.util.*;
 import static gitlet.Utils.join;
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
  *  @quanjingchen@gmail.com
@@ -26,31 +25,32 @@ public class Repository {
     public static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /** The object folder to save blobs and gitTrees etc. */
-    public static final File Objects_FOLDER = join(GITLET_DIR, "objects");
+    public static final File OBJECTS_FOLDER = join(GITLET_DIR, "objects");
 
     /** The object folder to save commits. */
-    public static final File Commits_FOLDER = join(GITLET_DIR, "commits");
+    public static final File COMMITS_FOLDER = join(GITLET_DIR, "commits");
 
     /** The branch folder to save master and branch. */
-    public static final File Branch_FOLDER = join(GITLET_DIR, "refs");
+    public static final File BRANCH_FOLDER = join(GITLET_DIR, "refs");
 
     /** The master file to save HEAD pointer in the branch dir. */
-    public static final File masterFile = join(Branch_FOLDER, "master");
+    public static final File MASTER_FILE = join(BRANCH_FOLDER, "master");
 
     /** The head pointer file. */
-    public static final File ActiveBranchFile = new File(GITLET_DIR, "HEAD.txt");
+    public static final File ACTIVEBRANCH_FILE = new File(GITLET_DIR, "HEAD.txt");
 
     /** The index file for staging area. */
-    public static final File stage = new File(GITLET_DIR, "index");
+    public static final File STAGE = new File(GITLET_DIR, "index");
 
     /** The trash file for file removal. */
-    public static final File trash = new File(GITLET_DIR, "trash");
+    public static final File TRASH = new File(GITLET_DIR, "trash");
 
     /** The log file for debugging purpose. */
-    public static final File logFile = new File(GITLET_DIR, "log.txt");
+    public static final File LOGFILE = new File(GITLET_DIR, "log.txt");
 
     /**
-     * Creates a new Gitlet version-control system in the current directory. It has a single bran: Master,
+     * Creates a new Gitlet version-control system in the current directory.
+     * It has a single bran: Master,
      * which initially points to the initial commit
      */
     public static void init() throws IOException {
@@ -58,25 +58,26 @@ public class Repository {
         // initialize dirs and files.
         if (!GITLET_DIR.exists()) {
             GITLET_DIR.mkdir();
-            Objects_FOLDER.mkdir();
-            Commits_FOLDER.mkdir();
-            Branch_FOLDER.mkdir();
-            masterFile.createNewFile();
-            ActiveBranchFile.createNewFile();
-            String ActiveBranch = "refs/master";
-            Utils.writeContents(ActiveBranchFile, ActiveBranch);
+            OBJECTS_FOLDER.mkdir();
+            COMMITS_FOLDER.mkdir();
+            BRANCH_FOLDER.mkdir();
+            MASTER_FILE.createNewFile();
+            ACTIVEBRANCH_FILE.createNewFile();
+            String activeBranch = "refs/master";
+            Utils.writeContents(ACTIVEBRANCH_FILE, activeBranch);
             Commit c = new Commit();
             c.saveCommit();
-            File headPath = new File(GITLET_DIR, ActiveBranch);
+            File headPath = new File(GITLET_DIR, activeBranch);
             Utils.writeContents(headPath, c.getSHA1());
         } else {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system " +
+                    "already exists in the current directory.");
         }
     }
 
     /**  Adds a copy of the file as it currently exists to the staging area. */
     public static void add(String fileName) throws IOException {
-        blob newFile = new blob(fileName);
+        Blob newFile = new Blob(fileName);
         // get the head commit file table.
         Map<String, String> fileTable = getHeadCommitFileTable();
         // build the staging area.
@@ -84,28 +85,32 @@ public class Repository {
         Map<String, String> trashTable = buildTrash();
         // If the file is added it will no longer be staged for removal.
         trashTable.remove(fileName);
-        Utils.writeObject(trash, new GitTree(trashTable));
+        Utils.writeObject(TRASH, new GitTree(trashTable));
         // If the current working version of the file is not added
         // and is not identical to the version in the current commit,
         // stage it and remove it from trash if it's there.
-        if (!(stageTable.containsValue(newFile.getSHA1())) & !(fileTable.containsValue(newFile.getSHA1()))) {
+        if (!(stageTable.containsValue(newFile.getSHA1()))
+                & !(fileTable.containsValue(newFile.getSHA1()))) {
             stageTable.put(fileName, newFile.getSHA1());
             newFile.saveBlob();
         }
-        // If the current working version of the file is identical to the version in the current commit,
-        // do not stage it to be added, and remove it from the staging area if it is already there
+        // If the current working version of the file is identical to
+        // the version in the current commit,
+        // do not stage it to be added,
+        // and remove it from the staging area if it is already there
         if (stageTable.containsValue(newFile.getSHA1()) & fileTable.containsValue(newFile.getSHA1())) {
             stageTable.remove(fileName);
         }
         GitTree stageTree = new GitTree(stageTable);
-        Utils.writeObject(stage, stageTree);
+        Utils.writeObject(STAGE, stageTree);
     }
 
     /**  Remove a file from the staging area and the working directory if it's tracked. */
     public static void rm(String fileName) throws IOException {
         // get the head commit file table.
         Map<String, String> fileTable = getHeadCommitFileTable();
-        // remove the file from the working directory if it's tracked in the current commit.
+        // remove the file from the working directory
+        // if it's tracked in the current commit.
         if (fileTable.containsKey(fileName)) {
             File newFile = new File(CWD, fileName);
             if (newFile.exists()) {
@@ -119,13 +124,13 @@ public class Repository {
             // remove the file from staging area if it's staged.
             if (stageTable.containsKey(fileName)) {
                 stageTable.remove(fileName);
-                Utils.writeObject(stage, new GitTree(stageTable));
+                Utils.writeObject(STAGE, new GitTree(stageTable));
             } else {
                 // load the trash.
                 Map<String, String> trashTable = buildTrash();
                 // write file name to trash table if it's staged or tracked.
                 trashTable.put(fileName, "to be deleted");
-                Utils.writeObject(trash, new GitTree(trashTable));
+                Utils.writeObject(TRASH, new GitTree(trashTable));
             }
         } else {
             System.out.println("No reason to remove the file.");
@@ -137,10 +142,10 @@ public class Repository {
     public static Map<String, String> buildStage() {
         // build the staging area.
         Map<String, String> stageTable;
-        if (!stage.exists()) {
+        if (!STAGE.exists()) {
             stageTable = new TreeMap<>();
         } else {
-            GitTree stageTree = Utils.readObject(stage, GitTree.class);
+            GitTree stageTree = Utils.readObject(STAGE, GitTree.class);
             stageTable = stageTree.getTable();
         }
         return stageTable;
@@ -150,10 +155,10 @@ public class Repository {
     public static Map<String, String> buildTrash() {
         // build the staging area.
         Map<String, String> trashTable;
-        if (!trash.exists()) {
+        if (!TRASH.exists()) {
             trashTable = new TreeMap<>();
         } else {
-            GitTree trashTree = Utils.readObject(trash, GitTree.class);
+            GitTree trashTree = Utils.readObject(TRASH, GitTree.class);
             trashTable = trashTree.getTable();
         }
         return trashTable;
@@ -167,34 +172,34 @@ public class Repository {
     }
     public static void commit(String message, String secondParent) {
         // abort if no files have been staged.
-        if (!stage.exists() & !trash.exists()) {
+        if (!STAGE.exists() & !TRASH.exists()) {
             System.out.println("No changes added to the commit.");
             System.exit(0);
         }
         // get the head commit file table.
         Map<String, String> fileTable = getHeadCommitFileTable();
         // get the stage GitTree and add them to the file table.
-        if (stage.exists()) {
-            GitTree stageTree = Utils.readObject(stage, GitTree.class);
+        if (STAGE.exists()) {
+            GitTree stageTree = Utils.readObject(STAGE, GitTree.class);
             Map<String, String> stageTable = stageTree.getTable();
             fileTable.putAll(stageTable);
             // empty the stage area.
-            stage.delete();
+            STAGE.delete();
         }
         // get the trash GitTree and remove them from the file table.
-        if (trash.exists()) {
-            GitTree trashTree = Utils.readObject(trash, GitTree.class);
+        if (TRASH.exists()) {
+            GitTree trashTree = Utils.readObject(TRASH, GitTree.class);
             Map<String, String> trashTable = trashTree.getTable();
             Set<String> trashKeys = trashTable.keySet();
             fileTable.keySet().removeAll(trashKeys);
             // empty the trash.
-            trash.delete();
+            TRASH.delete();
         }
         // save the new GitTree.
         GitTree newGitTree = new GitTree(fileTable);
         newGitTree.saveGitTree();
         // get the head commit.
-        String headCommit = getHeadCommitSha1();
+        String headCommit = getheadcommitSha1();
         // push the stage file to commit, save the commit file to the object folder.
         Commit c = new Commit(message, headCommit, secondParent, newGitTree.getSHA1());
         c.saveCommit();
@@ -206,30 +211,30 @@ public class Repository {
      * Removes tracked files that are not present in that commit.
      * Also moves the current branch’s head to that commit node. */
     public static void reset (String commitID) throws IOException {
-        checkoutCommit(getHeadCommitSha1(), commitID);
+        checkoutCommit(getheadcommitSha1(), commitID);
         // reset the head to the current commit.
         Utils.writeContents(getHeadPath(), commitID);
         // clean the stage and trash area.
-        stage.delete();
-        trash.delete();
+        STAGE.delete();
+        TRASH.delete();
     }
 
     /**  Creates a new branch with the given name,
      * and points it at the current head commit. */
     public static void branch (String branchName) throws IOException {
         // get current head commit SHA1
-        String HeadCommitSha1 = getHeadCommitSha1();
+        String headcommitSha1 = getheadcommitSha1();
         // The branch file that saves HEAD pointer in the branch dir.
-        File branchFile = join(Branch_FOLDER, branchName);
+        File branchFile = join(BRANCH_FOLDER, branchName);
         if (branchFile.exists()) {
             System.out.println("A branch with that name already exists.");
             System.exit(0);
         }
         branchFile.createNewFile();
         // points it at the current head commit but DON'T immediately switch to the newly created branch
-        String ActiveBranch = "refs/" + branchName;
-        File headPath = new File(GITLET_DIR, ActiveBranch);
-        Utils.writeContents(headPath, HeadCommitSha1);
+        String activeBranch = "refs/" + branchName;
+        File headPath = new File(GITLET_DIR, activeBranch);
+        Utils.writeContents(headPath, headcommitSha1);
     }
 
     /** Deletes the branch with the given name.
@@ -238,16 +243,16 @@ public class Repository {
      * or anything like that. */
     public static void rm_branch (String branchName) throws IOException {
         // The branch file that saves HEAD pointer in the branch dir.
-        File branchFile = join(Branch_FOLDER, branchName);
+        File branchFile = join(BRANCH_FOLDER, branchName);
         if (!branchFile.exists()) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
         // get the current active branch
-        String ActiveBranch_path = Utils.readContentsAsString(ActiveBranchFile);
-        String ActiveBranch = ActiveBranch_path.substring(5,ActiveBranch_path.length());
+        String activeBranch_path = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
+        String activeBranch = activeBranch_path.substring(5,activeBranch_path.length());
         // quit if the given branch is the one you’re currently working on.
-        if (branchName.equals(ActiveBranch)) {
+        if (branchName.equals(activeBranch)) {
             System.out.println("Cannot remove the current branch.");
             System.exit(0);
         } else {
@@ -259,112 +264,122 @@ public class Repository {
     /** Takes all files in the given commit,
      * and puts them in the working directory,
      * overwriting the versions of the files that are already there if they exist.
-     * Any files that are tracked in the current commit but are not present in the checked-out commit are deleted. */
+     * Any files that are tracked in the current commit but are not present
+     * in the checked-out commit are deleted. */
     public static void checkoutCommit (String commitID_C,String commitID_B) throws IOException {
         // get the commit of the current branch.
         Commit C = Commit.readCommit(commitID_C);
         Map<String, String> fileTable = C.getTable();
-        Set<String> CKeySet = fileTable.keySet();
+        Set<String> ckeySet = fileTable.keySet();
 
         // get the commit of the given commit.
         Commit B = Commit.readCommit(commitID_B);
         Map<String, String> fileTableBranch = B.getTable();
-        Set<String> BKeySet = fileTableBranch.keySet();
+        Set<String> bkeySet = fileTableBranch.keySet();
 
-        List<String> FileNames = Utils.plainFilenamesIn(CWD);
-        Set<String> CWDSet = new HashSet<>(FileNames);
+        List<String> fileNames = Utils.plainfileNamesIn(CWD);
+        Set<String> cwdSet = new HashSet<>(fileNames);
         // get the intersection of the CWD and Bkey sets.
-        Set<String> inter_B_CWD = new HashSet<>(CWDSet);
-        inter_B_CWD.retainAll(BKeySet);
+        Set<String> inter_B_CWD = new HashSet<>(cwdSet);
+        inter_B_CWD.retainAll(bkeySet);
         // exclude files in Ckey set.
-        inter_B_CWD.removeAll(CKeySet);
+        inter_B_CWD.removeAll(ckeySet);
         if (!inter_B_CWD.isEmpty()) {
-            // quit if a working file is untracked in the current branch and would be overwritten by the checkout.
+            // quit if a working file is untracked in the current branch and
+            // would be overwritten by the checkout.
             // check this before doing anything else.
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+            System.out.println("There is an untracked file in the way; " +
+                    "delete it, or add and commit it first.");
             System.exit(0);
         }
 
         // iterate over the files in the given commit.
-        for (String BKey : BKeySet) {
-            File file_tmp = join(CWD, BKey);
+        for (String BKey : bkeySet) {
+            File fileTmp = join(CWD, BKey);
             //  overwrite the versions of the files that are tracked or create it if not exist.
                 // create/replace the file in working dir.
-                blob fileBlob = blob.readBlob(fileTableBranch.get(BKey));
-                fileBlob.WriteBlobToFile();
+            Blob fileBlob = Blob.readBlob(fileTableBranch.get(BKey));
+            fileBlob.writeBlobToFile();
         }
 
-        // delete the files that are tracked in the current branch and are not present in the given branch
-        CKeySet.removeAll(BKeySet);
-        for (String CKey : CKeySet) {
-            File file_tmp = join(CWD, CKey);
-            file_tmp.delete();
+        // delete the files that are tracked in the current branch and
+        // are not present in the given branch
+        ckeySet.removeAll(bkeySet);
+        for (String CKey : ckeySet) {
+            File fileTmp = join(CWD, CKey);
+            fileTmp.delete();
         }
 
     }
 
 
     /** Takes all files in the commit at the head of the given branch,
-     * and puts them in the working directory, overwriting the versions of the files that are already there if they exist.
-     * Also, at the end of this command, the given branch will now be considered the current branch (HEAD).
-     * Any files that are tracked in the current branch but are not present in the checked-out branch are deleted.
+     * and puts them in the working directory, overwriting the versions of
+     * the files that are already there if they exist.
+     * Also, at the end of this command,
+     * the given branch will now be considered the current branch (HEAD).
+     * Any files that are tracked in the current branch but
+     * are not present in the checked-out branch are deleted.
      * The staging area is cleared, unless the checked-out branch is the current branch */
     public static void checkoutBranch (String branchName) throws IOException {
 
         // get the current active branch name
-        String ActiveBranch_path = Utils.readContentsAsString(ActiveBranchFile);
-        String ActiveBranch = ActiveBranch_path.substring(5,ActiveBranch_path.length());
-        if (branchName.equals(ActiveBranch)) {
+        String activeBranch_path = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
+        String activeBranch = activeBranch_path.substring(5,activeBranch_path.length());
+        if (branchName.equals(activeBranch)) {
             System.out.println("No need to checkout the current branch.");
             System.exit(0);
         }
-        checkoutCommit(getHeadCommitSha1(), getBranchHeadCommitSha1(branchName));
+        checkoutCommit(getheadcommitSha1(), getBranchheadcommitSha1(branchName));
 
         // reset the active branch, clear the stage area and trash.
-        Utils.writeContents(ActiveBranchFile, "refs/" + branchName);
-        stage.delete();
-        trash.delete();
+        Utils.writeContents(ACTIVEBRANCH_FILE, "refs/" + branchName);
+        STAGE.delete();
+        TRASH.delete();
     }
 
-    /** Takes the version of the file as it exists in the head commit and puts it in the working directory,
+    /** Takes the version of the file as it exists in the head commit and
+     * puts it in the working directory,
      *  overwriting the version of the file that’s already there if there is one. */
     public static void checkoutHead (String fileName) throws IOException {
         // get the head commit gitTree.
-        checkoutFile(getHeadCommitSha1(), fileName);
+        checkoutFile(getheadcommitSha1(), fileName);
     }
 
-    /** Takes the version of the file as it exists in the commit with the given id, and puts it in the working directory,
+    /** Takes the version of the file as it exists in the commit with the given id,
+     * and puts it in the working directory,
      *  overwriting the version of the file that’s already there if there is one. */
     public static void checkoutFile (String commitID, String fileName) throws IOException {
         // get the commit of the current branch.
-        Commit C = Commit.readCommit(getHeadCommitSha1());
+        Commit C = Commit.readCommit(getheadcommitSha1());
         Map<String, String> fileTable = C.getTable();
-        Set<String> CKeySet = fileTable.keySet();
+        Set<String> ckeySet = fileTable.keySet();
 
         // get the commit of the given commit.
         Commit B = Commit.readCommit(commitID);
-        Map<String, String> fileTable_B = B.getTable();
-        Set<String> BKeySet = fileTable_B.keySet();
+        Map<String, String> fileTableB = B.getTable();
+        Set<String> bkeySet = fileTableB.keySet();
 
         // check if the file exists in the cwd.
-        File file_tmp = join(CWD, fileName);
+        File fileTmp = join(CWD, fileName);
 
         // check if the file exists in the commit gitTree.
-        if (!fileTable_B.containsKey(fileName)) {
+        if (!fileTableB.containsKey(fileName)) {
             System.out.println("File does not exist in that commit.");
             System.exit(0);
         }
 
         // Quit if a working file is untracked in the current branch
         // and would be overwritten by the checkout.
-        if (!fileTable.containsKey(fileName) & file_tmp.exists()) {
-            System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+        if (!fileTable.containsKey(fileName) & fileTmp.exists()) {
+            System.out.println("There is an untracked file in the way; delete it, " +
+                    "or add and commit it first.");
             System.exit(0);
         }
 
         // replace the file in working dir.
-        blob fileBlob = blob.readBlob(fileTable_B.get(fileName));
-        fileBlob.WriteBlobToFile();
+        Blob fileBlob = Blob.readBlob(fileTableB.get(fileName));
+        fileBlob.writeBlobToFile();
     }
 
 
@@ -374,25 +389,25 @@ public class Repository {
      * ignoring any second parents found in merge commits. */
     public static void log() throws IOException {
         // get the commit gitTree.
-        Commit headCommit = Commit.readCommit(getHeadCommitSha1());
+        Commit headCommit = Commit.readCommit(getheadcommitSha1());
         Commit tmp;
         tmp = headCommit;
-        logFile.delete();
-        logFile.createNewFile();
+        LOGFILE.delete();
+        LOGFILE.createNewFile();
         String curString = tmp.toString();
         while (tmp.getParent() != null) {
             tmp = Commit.readCommit(tmp.getParent());
             curString += tmp.toString();
         }
         System.out.println(curString);
-        Utils.writeContents(logFile, curString);
+        Utils.writeContents(LOGFILE, curString);
     }
 
     /** displays information about all commits ever made regardless of the order. */
     public static void global_log() throws IOException {
-        // get all commits in the Commits_FOLDER
-        List<String> CommitNames = Utils.plainFilenamesIn(Commits_FOLDER);
-        for (String CommitName : CommitNames) {
+        // get all commits in the COMMITS_FOLDER
+        List<String> commitNames = Utils.plainfileNamesIn(COMMITS_FOLDER);
+        for (String CommitName : commitNames) {
             Commit tmp = Commit.readCommit(CommitName);
             System.out.println(tmp.toString());
         }
@@ -400,10 +415,10 @@ public class Repository {
 
     /** Prints out the ids of all commits that have the given commit message, one per line. */
     public static void find(String message) throws IOException {
-        // get all commits in the Commits_FOLDER
-        List<String> CommitNames = Utils.plainFilenamesIn(Commits_FOLDER);
+        // get all commits in the COMMITS_FOLDER
+        List<String> commitNames = Utils.plainfileNamesIn(COMMITS_FOLDER);
         int n = 0;
-        for (String CommitName : CommitNames) {
+        for (String CommitName : commitNames) {
             Commit tmp = Commit.readCommit(CommitName);
             if (tmp.getMessage().equals(message)) {
                 System.out.println(CommitName);
@@ -420,24 +435,24 @@ public class Repository {
          * Also displays what files have been staged for addition or removal. */
     public static void status() throws IOException {
         // get all branch
-        List<String> BranchNames = Utils.plainFilenamesIn(Branch_FOLDER);
+        List<String> branchNames = Utils.plainfileNamesIn(BRANCH_FOLDER);
         // get current branch
-        String ActiveBranch_path = Utils.readContentsAsString(ActiveBranchFile);
-        String ActiveBranch = ActiveBranch_path.substring(5,ActiveBranch_path.length());
+        String activeBranch_path = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
+        String activeBranch = activeBranch_path.substring(5,activeBranch_path.length());
         System.out.println("=== Branches ===");
         // for each branch print the branch name and add * if it's the active branch.
-        for (String BranchName : BranchNames) {
-            if (BranchName.equals(ActiveBranch)) {
-                System.out.println(String.format("*%s", BranchName));
+        for (String branchName : branchNames) {
+            if (branchName.equals(activeBranch)) {
+                System.out.println(String.format("*%s", branchName));
             } else {
-                System.out.println(BranchName);
+                System.out.println(branchName);
             }
         }
         // display what files have been staged
         System.out.println("\n=== Staged Files ===");
         // get the stage GitTree and print all the keys.
-        if (stage.exists()) {
-            GitTree stageTree = Utils.readObject(stage, GitTree.class);
+        if (STAGE.exists()) {
+            GitTree stageTree = Utils.readObject(STAGE, GitTree.class);
             Map<String, String> stageTable = stageTree.getTable();
             Set<String> stageKeys = stageTable.keySet();
             //print all the keys
@@ -448,8 +463,8 @@ public class Repository {
         // display what files have been removed
         System.out.println("\n=== Removed Files ===");
         // get the trash GitTree and print all the keys.
-        if (trash.exists()) {
-            GitTree trashTree = Utils.readObject(trash, GitTree.class);
+        if (TRASH.exists()) {
+            GitTree trashTree = Utils.readObject(TRASH, GitTree.class);
             Map<String, String> trashTable = trashTree.getTable();
             Set<String> trashKeys = trashTable.keySet();
             //print all the keys
@@ -463,52 +478,52 @@ public class Repository {
 
     /** Merges files from the given branch into the current branch. */
     public static void merge(String branchName) throws IOException {
-        if (stage.exists() || trash.exists()) {
+        if (STAGE.exists() || TRASH.exists()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
         }
         // get the current active branch name
-        String ActiveBranch_path = Utils.readContentsAsString(ActiveBranchFile);
-        String ActiveBranch = ActiveBranch_path.substring(5,ActiveBranch_path.length());
+        String activeBranch_path = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
+        String activeBranch = activeBranch_path.substring(5,activeBranch_path.length());
         // can't merge a branch with itself.
-        if (branchName.equals(ActiveBranch)) {
+        if (branchName.equals(activeBranch)) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
 
         // No such branch exists.
-        File BranchHeadPath = join(Branch_FOLDER, branchName);
+        File BranchHeadPath = join(BRANCH_FOLDER, branchName);
         if (!BranchHeadPath.exists()) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
         }
         // get the commit of the current branch.
-        Commit C = Commit.readCommit(getHeadCommitSha1());
-        Map<String, String> fileTable_C = C.getTable();
-        Set<String> CKeySet = fileTable_C.keySet();
+        Commit C = Commit.readCommit(getheadcommitSha1());
+        Map<String, String> fileTableC = C.getTable();
+        Set<String> ckeySet = fileTableC.keySet();
         // get the ancestors of the current branch.
-        List<String> C_Ancestor = getCommitAncestor(C);
+        List<String> cAncestor = getCommitAncestor(C);
         // get the commit of the given branch.
-        Commit B = Commit.readCommit(getBranchHeadCommitSha1(branchName));
-        Map<String, String> fileTable_B = B.getTable();
-        Set<String> BKeySet = fileTable_B.keySet();
+        Commit B = Commit.readCommit(getBranchheadcommitSha1(branchName));
+        Map<String, String> fileTableB = B.getTable();
+        Set<String> bkeySet = fileTableB.keySet();
         // get the ancestors of the given branch.
-        List<String> B_Ancestor = getCommitAncestor(B);
+        List<String> bAncestor = getCommitAncestor(B);
 
         // get the split point
         int splitIndex = 0;
-        for (int i = 1; i <= Math.min(C_Ancestor.size(), B_Ancestor.size()); i ++) {
-            if (!C_Ancestor.get(C_Ancestor.size()-i).equals(B_Ancestor.get(B_Ancestor.size()-i))) {
+        for (int i = 1; i <= Math.min(cAncestor.size(), bAncestor.size()); i ++) {
+            if (!cAncestor.get(cAncestor.size()-i).equals(bAncestor.get(bAncestor.size()-i))) {
                 break;
             }
             splitIndex ++;
         }
-        if (splitIndex == B_Ancestor.size()) {
+        if (splitIndex == bAncestor.size()) {
             // If the split point is the same commit as the give branch,
             // then we do nothing
             System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
-        } else if (splitIndex == C_Ancestor.size()) {
+        } else if (splitIndex == cAncestor.size()) {
             //If the split point is the current branch,
             // then check out the given branch
             checkoutBranch(branchName);
@@ -516,41 +531,43 @@ public class Repository {
             System.exit(0);
         }
         // get the commit at the split point
-        Commit S = Commit.readCommit(C_Ancestor.get(C_Ancestor.size() - splitIndex));
-        Map<String, String> fileTable_S = S.getTable();
-        Set<String> SKeySet = fileTable_S.keySet();
+        Commit S = Commit.readCommit(cAncestor.get(cAncestor.size() - splitIndex));
+        Map<String, String> fileTableS = S.getTable();
+        Set<String> skeySet = fileTableS.keySet();
         // get the union of the three key sets
         Set<String> uni_3 = new HashSet<String>();
-        uni_3.addAll(SKeySet);
-        uni_3.addAll(CKeySet);
-        uni_3.addAll(BKeySet);
+        uni_3.addAll(skeySet);
+        uni_3.addAll(ckeySet);
+        uni_3.addAll(bkeySet);
         // get the intersection of the three key sets.
-        Set<String> inter_3 = new HashSet<>(SKeySet);
-        inter_3.retainAll(CKeySet);
-        inter_3.retainAll(BKeySet);
+        Set<String> inter_3 = new HashSet<>(skeySet);
+        inter_3.retainAll(ckeySet);
+        inter_3.retainAll(bkeySet);
         // get the intersection of S and C.
-        Set<String> inter_SC = new HashSet<>(SKeySet);
-        inter_SC.retainAll(CKeySet);
+        Set<String> inter_SC = new HashSet<>(skeySet);
+        inter_SC.retainAll(ckeySet);
         // get the intersection of S and B.
-        Set<String> inter_SB = new HashSet<>(SKeySet);
-        inter_SB.retainAll(BKeySet);
+        Set<String> inter_SB = new HashSet<>(skeySet);
+        inter_SB.retainAll(bkeySet);
         // get the intersection of S and C.
-        Set<String> inter_CB = new HashSet<>(CKeySet);
-        inter_CB.retainAll(BKeySet);
+        Set<String> inter_CB = new HashSet<>(ckeySet);
+        inter_CB.retainAll(bkeySet);
 
         // check if an untracked file in the current commit would be overwritten by the merge.
         // before doing anything else.
-        List<String> FileNames = Utils.plainFilenamesIn(CWD);
-        Set<String> CWDSet = new HashSet<>(FileNames);
+        List<String> fileNames = Utils.plainfileNamesIn(CWD);
+        Set<String> cwdSet = new HashSet<>(fileNames);
         // get the intersection of the CWD and Bkey sets.
-        Set<String> inter_B_CWD = new HashSet<>(CWDSet);
-        inter_B_CWD.retainAll(BKeySet);
+        Set<String> inter_B_CWD = new HashSet<>(cwdSet);
+        inter_B_CWD.retainAll(bkeySet);
         // exclude files in Ckey set.
-        inter_B_CWD.removeAll(CKeySet);
+        inter_B_CWD.removeAll(ckeySet);
         if (!inter_B_CWD.isEmpty()) {
             for (String file : inter_B_CWD) {
-                if (!SKeySet.contains(file) || (SKeySet.contains(file) & !fileTable_S.get(file).equals(fileTable_B.get(file)))) {
-                    System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                if (!skeySet.contains(file) || (skeySet.contains(file)
+                        & !fileTableS.get(file).equals(fileTableB.get(file)))) {
+                    System.out.println("There is an untracked file in the way; " +
+                            "delete it, or add and commit it first.");
                     System.exit(0);
                 }
             }
@@ -563,7 +580,8 @@ public class Repository {
             if (inter_3.contains(file)) {
 
                 // 1) S = C != B : check B and stage
-                if (fileTable_S.get(file).equals(fileTable_C.get(file)) & !fileTable_S.get(file).equals(fileTable_B.get(file))) {
+                if (fileTableS.get(file).equals(fileTableC.get(file))
+                        & !fileTableS.get(file).equals(fileTableB.get(file))) {
                     // Any files that have been modified in the given branch (B) since the split point,
                     // but not modified in the current branch (C) since the split point
                     // should be changed to their versions in the given branch (B)
@@ -574,17 +592,18 @@ public class Repository {
                 // 2) S = B != C : stay
                 // 3) S != B = C : stay
                 // 4) S != C != B : conflict
-                if (!fileTable_S.get(file).equals(fileTable_C.get(file))
-                        & !fileTable_S.get(file).equals(fileTable_B.get(file))
-                        & !fileTable_C.get(file).equals(fileTable_B.get(file))) {
-                     // Any files modified in different ways in the current and given branches are in conflict.
+                if (!fileTableS.get(file).equals(fileTableC.get(file))
+                        & !fileTableS.get(file).equals(fileTableB.get(file))
+                        & !fileTableC.get(file).equals(fileTableB.get(file))) {
+                     // Any files modified in different ways in the current
+                    // and given branches are in conflict.
                     // replace the contents of the conflicted file and stage the result.
-                    mergeHelper(fileTable_C.get(file),fileTable_B.get(file));
+                    mergeHelper(fileTableC.get(file),fileTableB.get(file));
                     add(file);
                 }
 
             } else if (inter_SC.contains(file)) {
-                if (fileTable_S.get(file).equals(fileTable_C.get(file))) {
+                if (fileTableS.get(file).equals(fileTableC.get(file))) {
                     // 5) S = C !B : remove and untrack
                     // Any files present at the split point,
                     // unmodified in the current branch,
@@ -592,36 +611,36 @@ public class Repository {
                     rm(file);
                 } else {
                     // 6) S != C !B : conflict
-                    mergeHelper(fileTable_C.get(file));
+                    mergeHelper(fileTableC.get(file));
                 }
 
             } else if (inter_SB.contains(file)) {
                 // 7) S = B !C : remain
                 // 8) S != B !C : conflict
-                if (!fileTable_S.get(file).equals(fileTable_B.get(file))) {
-                    mergeHelper(fileTable_C.get(file));
+                if (!fileTableS.get(file).equals(fileTableB.get(file))) {
+                    mergeHelper(fileTableC.get(file));
                 }
 
             } else if (inter_CB.contains(file)) {
                 // 9)  !S C = B : remain
                 // 10) !S C != B : conflict
-                if (!fileTable_C.get(file).equals(fileTable_B.get(file))) {
+                if (!fileTableC.get(file).equals(fileTableB.get(file))) {
                     // If the file was absent at the split point
                     // and has different contents in the given and current branches,
                     // replace the contents of the conflicted file and stage the result.
-                    mergeHelper(fileTable_C.get(file),fileTable_B.get(file));
+                    mergeHelper(fileTableC.get(file),fileTableB.get(file));
                 }
 
                 // 11) !S C !B : remain
                 // 12) !S !C B : check and stage
-            } else if (BKeySet.contains(file)) {
+            } else if (bkeySet.contains(file)) {
                 checkoutFile(B.getSHA1(), file);
                 add(file);
                 // 13) S !C !B : remain
             }
         }
-        String msg = "Merged " + branchName + " into " + ActiveBranch + ".";
-        commit(msg,getBranchHeadCommitSha1(branchName));
+        String msg = "Merged " + branchName + " into " + activeBranch + ".";
+        commit(msg,getBranchheadcommitSha1(branchName));
     }
 
     /** merge one txt files with an empty file and save to the working directory */
@@ -629,15 +648,16 @@ public class Repository {
         mergeHelper(fileName1, null);
     }
 
-    /** merge two txt files with the same name and different gitSHA1 and save to the working directory */
+    /** merge two txt files with the same name and
+     * different gitSHA1 and save to the working directory */
     public static void mergeHelper(String fileName1, String fileName2) throws IOException {
-        blob fileBlob_C = blob.readBlob(fileName1);
-        String file_C = fileBlob_C.FileContent;
+        Blob fileBlob_C = Blob.readBlob(fileName1);
+        String file_C = fileBlob_C.fileContent;
         String tmp;
         if (fileName2 != null) {
-            blob fileBlob_B = blob.readBlob(fileName2);
-            String file_B = fileBlob_B.FileContent;
-            if (!fileBlob_C.FileName.equals(fileBlob_B.FileName)) {
+            Blob fileBlob_B = Blob.readBlob(fileName2);
+            String file_B = fileBlob_B.fileContent;
+            if (!fileBlob_C.fileName.equals(fileBlob_B.fileName)) {
                 System.out.println("Two files must have the same file names.");
                 System.exit(0);
             }
@@ -645,7 +665,7 @@ public class Repository {
         } else {
             tmp = "<<<<<<< HEAD\n" + file_C + "=======\n" + ">>>>>>>";
         }
-        File newFile = new File(CWD, fileBlob_C.FileName);
+        File newFile = new File(CWD, fileBlob_C.fileName);
         newFile.createNewFile();
         Utils.writeContents(newFile, tmp);
         System.out.println("Encountered a merge conflict.");
@@ -653,34 +673,34 @@ public class Repository {
 
     public static List<String> getCommitAncestor(Commit C) {
         // get the commit of the split point
-        List<String> C_Ancestor = new ArrayList<String>();
-        C_Ancestor.add(C.getSHA1());
+        List<String> cAncestor = new ArrayList<String>();
+        cAncestor.add(C.getSHA1());
         while (C.getParent() != null) {
             C = Commit.readCommit(C.getParent());
-            C_Ancestor.add(C.getSHA1());
+            cAncestor.add(C.getSHA1());
         }
-        return C_Ancestor;
+        return cAncestor;
     }
 
     public static Map<String, String> getHeadCommitFileTable() {
-        Commit C = Commit.readCommit(getHeadCommitSha1());
+        Commit C = Commit.readCommit(getheadcommitSha1());
         return  C.getTable();
     }
 
 
-    public static String getHeadCommitSha1() {
+    public static String getheadcommitSha1() {
         String headCommit = Utils.readContentsAsString(getHeadPath());
         return  headCommit;
     }
 
     public static File getHeadPath() {
-        String ActiveBranch = Utils.readContentsAsString(ActiveBranchFile);
-        File headPath = new File(GITLET_DIR, ActiveBranch);
+        String activeBranch = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
+        File headPath = new File(GITLET_DIR, activeBranch);
         return headPath;
     }
 
-    public static String getBranchHeadCommitSha1(String branchName) {
-        File BranchHeadPath = join(Branch_FOLDER, branchName);
+    public static String getBranchheadcommitSha1(String branchName) {
+        File BranchHeadPath = join(BRANCH_FOLDER, branchName);
         if (!BranchHeadPath.exists()) {
             System.out.println("No such branch exists.");
             System.exit(0);

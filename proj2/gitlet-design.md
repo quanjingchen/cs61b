@@ -8,10 +8,10 @@
 
 #### Instance Variables
 
-1. Message - [string] contains the message of a commit
-2. Timestamp - [string] time at which a commit was created
-3. Parent - [string] the parent commit of a commit object
-4. Tree - [string] directory structures mapping names to references to blobs and other trees
+1. message - [string] contains the message of a commit
+2. timeStamp - [string] time at which a commit was created
+3. parent - [string] the parent commit of a commit object
+4. tree - [string] directory structures mapping names to references to blobs and other trees
 
 
 ### Blob

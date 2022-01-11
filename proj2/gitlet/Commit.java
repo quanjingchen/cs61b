@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.*;
 
 /** Represents a gitlet commit object.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
  *  @Quanjingchen
@@ -18,14 +17,14 @@ public class Commit implements Serializable {
      */
 
     /** Folder that saves commit objects. */
-    static final File Commits_FOLDER = Utils.join(Repository.GITLET_DIR, "commits");
+    static final File COMMITS_FOLDER = Utils.join(Repository.GITLET_DIR, "commits");
 
     /** The message of this Commit. */
-    private String Message;
-    private String Timestamp;
-    private String Parent;
-    private String SecondParent;
-    private String Tree;
+    private String message;
+    private String timeStamp;
+    private String parent;
+    private String secondParent;
+    private String tree;
 
 
     public Commit() {
@@ -33,21 +32,21 @@ public class Commit implements Serializable {
         Date date = new Date(0);
         // display time and date
         String str = String.format("%ta %<tb %<td %<tT %<tY %<tz", date);
-        this.Timestamp = str;
+        this.timeStamp = str;
     }
     public Commit(String message, String parent, String tree) {
         this(message, parent, null, tree);
     }
 
     public Commit(String message, String parent, String secondParent, String tree) {
-        this.Message = message;
-        this.Parent = parent;
-        this.SecondParent = secondParent;
-        this.Tree = tree;
+        this.message = message;
+        this.parent = parent;
+        this.secondParent = secondParent;
+        this.tree = tree;
         Date date = new Date();
         // display time and date
         String str = String.format("%ta %<tb %<td %<tT %<tY %<tz", date);
-        this.Timestamp = str;
+        this.timeStamp = str;
     }
 
     /** get sha1 of the commit */
@@ -59,15 +58,15 @@ public class Commit implements Serializable {
 
     /** get GitTree of the commit */
     public GitTree getGitTree() {
-        if (Tree != null) {
-            return GitTree.readGitTree(Tree);
+        if (tree != null) {
+            return GitTree.readGitTree(tree);
         } else {
             return null;
         }
     }
 
     public Map<String, String> getTable() {
-        if (Tree != null) {
+        if (tree != null) {
             GitTree gitTree = getGitTree();
             return gitTree.getTable();
         } else {
@@ -77,8 +76,8 @@ public class Commit implements Serializable {
 
     /** get parent of the commit */
     public String getParent() {
-        if (Parent != null) {
-            return Parent;
+        if (parent != null) {
+            return parent;
         } else {
             return null;
         }
@@ -86,8 +85,8 @@ public class Commit implements Serializable {
 
     /** get message of the commit */
     public String getMessage() {
-        if (Message != null) {
-            return Message;
+        if (message != null) {
+            return message;
         } else {
             return null;
         }
@@ -96,24 +95,24 @@ public class Commit implements Serializable {
 
     /** Save a commit to object folder */
     public void saveCommit() {
-        File outFile = new File(Commits_FOLDER, getSHA1());
+        File outFile = new File(COMMITS_FOLDER, getSHA1());
         Utils.writeObject(outFile, this);
     }
 
     /** Read a commit from object folder */
     public static Commit readCommit(String name) {
-        // get all commits in the Commits_FOLDER
-        List<String> CommitNames = Utils.plainFilenamesIn(Commits_FOLDER);
+        // get all commits in the COMMITS_FOLDER
+        List<String> commitNames = Utils.plainfileNamesIn(COMMITS_FOLDER);
         if (name.length() < 40) {
-            for (String CommitName : CommitNames) {
-                String tmp = CommitName.substring(0, name.length());
+            for (String commitName : commitNames) {
+                String tmp = commitName.substring(0, name.length());
                 if (tmp.equals(name)) {
-                    name = CommitName;
+                    name = commitName;
                     break;
                 }
             }
         }
-        File inFile = new File(Commits_FOLDER, name);
+        File inFile = new File(COMMITS_FOLDER, name);
         if (!inFile.exists()) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
@@ -125,10 +124,11 @@ public class Commit implements Serializable {
     /** convert commit to String */
     @Override
     public String toString() {
-        if (SecondParent == null) {
-            return String.format("===\ncommit %s\nDate: %s\n%s\n\n", getSHA1(), Timestamp, Message);
+        if (secondParent == null) {
+            return String.format("===\ncommit %s\nDate: %s\n%s\n\n", getSHA1(), timeStamp, message);
         } else {
-            return String.format("===\ncommit %s\nMerge: %s %s \nDate: %s\n%s\n\n", getSHA1(), Parent.substring(0, 7), SecondParent.substring(0, 7), Timestamp, Message);
+            return String.format("===\ncommit %s\nMerge: %s %s \nDate: %s\n%s\n\n",
+                    getSHA1(), parent.substring(0, 7), secondParent.substring(0, 7), timeStamp, message);
         }
     }
 
