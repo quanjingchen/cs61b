@@ -50,7 +50,7 @@ public class Main {
             case "commit":
                 initError();
                 incorrectError(args.length, 1);
-                if (args[1] == null) {
+                if (args[1].equals("")) {
                     System.out.println("Please enter a commit message.");
                     System.exit(0);
                 }

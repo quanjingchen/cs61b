@@ -120,12 +120,13 @@ public class Repository {
             if (stageTable.containsKey(fileName)) {
                 stageTable.remove(fileName);
                 Utils.writeObject(stage, new GitTree(stageTable));
+            } else {
+                // load the trash.
+                Map<String, String> trashTable = buildTrash();
+                // write file name to trash table if it's staged or tracked.
+                trashTable.put(fileName, "to be deleted");
+                Utils.writeObject(trash, new GitTree(trashTable));
             }
-            // load the trash.
-            Map<String, String> trashTable = buildTrash();
-            // write file name to trash table if it's staged or tracked.
-            trashTable.put(fileName, "to be deleted");
-            Utils.writeObject(trash, new GitTree(trashTable));
         } else {
             System.out.println("No reason to remove the file.");
             System.exit(0);
