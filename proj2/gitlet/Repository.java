@@ -475,6 +475,13 @@ public class Repository {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
+
+        // No such branch exists.
+        File BranchHeadPath = join(Branch_FOLDER, branchName);
+        if (!BranchHeadPath.exists()) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
         // get the commit of the current branch.
         Commit C = Commit.readCommit(getHeadCommitSha1());
         Map<String, String> fileTable_C = C.getTable();
