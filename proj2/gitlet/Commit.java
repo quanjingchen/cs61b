@@ -128,8 +128,8 @@ public class Commit implements Serializable {
             return String.format("===\ncommit %s\nDate: %s\n%s\n\n", getSHA1(), timeStamp, message);
         } else {
             return String.format("===\ncommit %s\nMerge: %s %s \nDate: %s\n%s\n\n",
-                    getSHA1(), parent.substring(0, 7), secondParent.substring(0, 7)
-                    , timeStamp, message);
+                    getSHA1(), parent.substring(0, 7), secondParent.substring(0, 7),
+                    timeStamp, message);
         }
     }
 

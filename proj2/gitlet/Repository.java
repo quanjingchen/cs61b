@@ -420,10 +420,10 @@ public class Repository {
         // get all commits in the COMMITS_FOLDER
         List<String> commitNames = Utils.plainfileNamesIn(COMMITS_FOLDER);
         int n = 0;
-        for (String CommitName : commitNames) {
-            Commit tmp = Commit.readCommit(CommitName);
+        for (String commitName : commitNames) {
+            Commit tmp = Commit.readCommit(commitName);
             if (tmp.getMessage().equals(message)) {
-                System.out.println(CommitName);
+                System.out.println(commitName);
                 n++;
             }
         }
@@ -479,7 +479,7 @@ public class Repository {
     }
 
     /** Merges files from the given branch into the current branch. */
-    public static void merge(String branchName) throws IOException {
+    public static void merge(String bN) throws IOException {
         if (STAGE.exists() || TRASH.exists()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
@@ -488,13 +488,13 @@ public class Repository {
         String activeBranchPath = Utils.readContentsAsString(ACTIVEBRANCH_FILE);
         String activeBranch = activeBranchPath.substring(5, activeBranchPath.length());
         // can't merge a branch with itself.
-        if (branchName.equals(activeBranch)) {
+        if (bN.equals(activeBranch)) {
             System.out.println("Cannot merge a branch with itself.");
             System.exit(0);
         }
 
         // No such branch exists.
-        File branchHeadPath = join(BRANCH_FOLDER, branchName);
+        File branchHeadPath = join(BRANCH_FOLDER, bN);
         if (!branchHeadPath.exists()) {
             System.out.println("A branch with that name does not exist.");
             System.exit(0);
@@ -506,7 +506,7 @@ public class Repository {
         // get the ancestors of the current branch.
         List<String> cAncestor = getCommitAncestor(C);
         // get the commit of the given branch.
-        Commit B = Commit.readCommit(getBranchheadcommitSha1(branchName));
+        Commit B = Commit.readCommit(getBranchheadcommitSha1(bN));
         Map<String, String> fileTableB = B.getTable();
         Set<String> bkeySet = fileTableB.keySet();
         // get the ancestors of the given branch.
@@ -528,7 +528,7 @@ public class Repository {
         } else if (splitIndex == cAncestor.size()) {
             //If the split point is the current branch,
             // then check out the given branch
-            checkoutBranch(branchName);
+            checkoutBranch(bN);
             System.out.println("Current branch fast-forwarded.");
             System.exit(0);
         }
@@ -584,7 +584,8 @@ public class Repository {
                 // 1) S = C != B : check B and stage
                 if (fileTableS.get(file).equals(fileTableC.get(file))
                         & !fileTableS.get(file).equals(fileTableB.get(file))) {
-                    // Any files that have been modified in the given branch (B) since the split point,
+                    // Any files that have been modified in the given branch (B)
+                    // since the split point,
                     // but not modified in the current branch (C) since the split point
                     // should be changed to their versions in the given branch (B)
                     // (checked out from the commit at the front of the given branch).
@@ -641,8 +642,8 @@ public class Repository {
                 // 13) S !C !B : remain
             }
         }
-        String msg = "Merged " + branchName + " into " + activeBranch + ".";
-        commit(msg, getBranchheadcommitSha1(branchName));
+        String msg = "Merged " + bN + " into " + activeBranch + ".";
+        commit(msg, getBranchheadcommitSha1(bN));
     }
 
     /** merge one txt files with an empty file and save to the working directory */

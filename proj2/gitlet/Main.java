@@ -183,12 +183,14 @@ public class Main {
         File GITLET_DIR = join(CWD, ".gitlet");
         if (!GITLET_DIR.exists()) {
             System.out.println("Not in an initialized Gitlet directory.");
+            System.exit(0);
         }
     }
 
     public static void incorrectError(int commandLength, int number) {
         if (commandLength - 1 != number) {
             System.out.println("Incorrect operands.");
+            System.exit(0);
         }
     }
 }
