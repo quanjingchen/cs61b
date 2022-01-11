@@ -16,8 +16,8 @@ public class Blob implements Serializable {
 
 
     /** the content of the blob*/
-    public String fileName;
-    public String fileContent;
+    private String fileName;
+    private String fileContent;
 
     public Blob(String fileName) {
         this.fileName = fileName;
@@ -27,6 +27,14 @@ public class Blob implements Serializable {
             System.exit(0);
         }
         this.fileContent = Utils.readContentsAsString(inFile);
+    }
+    /** get file name of the Blob */
+    public String getFileName() {
+        return fileName;
+    }
+    /** get file content of the Blob */
+    public String getFileContent() {
+        return fileContent;
     }
 
     /** get sha1 of the commit */

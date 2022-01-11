@@ -69,7 +69,7 @@ public class Main {
                 initError();
                 incorrectError(args.length, 1);
                 try {
-                    Repository.rm_branch(args[1]);
+                    Repository.rmBranch(args[1]);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -140,7 +140,7 @@ public class Main {
                 initError();
                 incorrectError(args.length, 0);
                 try {
-                    Repository.global_log();
+                    Repository.globalLog();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
