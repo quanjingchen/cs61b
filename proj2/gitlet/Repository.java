@@ -495,13 +495,12 @@ public class Repository {
         Commit C = Commit.readCommit(getheadcommitSha1());
         Map<String, String> fileTableC = C.getTable();
         Set<String> ckeySet = fileTableC.keySet();
-        List<String> cAncestor = getCommitAncestor(C);
         Commit B = Commit.readCommit(getBranchheadcommitSha1(branchName));
         Map<String, String> fileTableB = B.getTable();
         Set<String> bkeySet = fileTableB.keySet();
-        List<String> bAncestor = getCommitAncestor(B);
-        int splitIndex = getSplitPoint(cAncestor, bAncestor, branchName);
-        Commit S = Commit.readCommit(cAncestor.get(cAncestor.size() - splitIndex));
+        String splitHash = Commit.getSplitHash(C, B);
+        splitHelper(splitHash, getheadcommitSha1(), getBranchheadcommitSha1(branchName), branchName);
+        Commit S = Commit.readCommit(splitHash);
         Map<String, String> fileTableS = S.getTable();
         Set<String> skeySet = fileTableS.keySet();
         Set<String> uni3 = union3(skeySet, ckeySet, bkeySet);
@@ -579,29 +578,23 @@ public class Repository {
         inter2.retainAll(set2);
         return inter2;
     }
-    /** get split point */
-    public static int getSplitPoint(List list1, List list2, String branchName) throws IOException {
-        int splitIndex = 0;
-        for (int i = 1; i <= Math.min(list1.size(), list2.size()); i++) {
-            if (!list1.get(list1.size() - i).equals(list2.get(list2.size() - i))) {
-                break;
-            }
-            splitIndex++;
-        }
-        if (splitIndex == list2.size()) {
-            System.out.println("Given branch is an ancestor of the current branch.");
-            System.exit(0);
-        } else if (splitIndex == list1.size()) {
-            checkoutBranch(branchName);
-            System.out.println("Current branch fast-forwarded.");
-            System.exit(0);
-        }
-        return splitIndex;
-    }
+
     /** check if stage and trash are clear */
     public static void checkClear() {
         if (STAGE.exists() || TRASH.exists()) {
             System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+    }
+
+    /** check if the split point is the current branch or the given branch */
+    public static void splitHelper(String splitHash, String cHash, String bHash, String branchName) throws IOException {
+        if (splitHash.equals(cHash)) {
+            checkoutBranch(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            System.exit(0);
+        } else if (splitHash.equals(bHash)) {
+            System.out.println("Given branch is an ancestor of the current branch.");
             System.exit(0);
         }
     }
@@ -626,9 +619,9 @@ public class Repository {
                 System.out.println("Two files must have the same file names.");
                 System.exit(0);
             }
-            tmp = "<<<<<<< HEAD\n" + fileC + "\n=======\n" + fileB + ">>>>>>>";
+            tmp = "<<<<<<< HEAD\n" + fileC + "=======\n" + fileB + ">>>>>>>";
         } else {
-            tmp = "<<<<<<< HEAD\n" + fileC + "\n=======\n" + ">>>>>>>";
+            tmp = "<<<<<<< HEAD\n" + fileC + "=======\n" + ">>>>>>>";
         }
         File newFile = new File(CWD, fileBlobC.getFileName());
         newFile.createNewFile();
@@ -636,16 +629,7 @@ public class Repository {
         System.out.println("Encountered a merge conflict.");
     }
 
-    public static List<String> getCommitAncestor(Commit C) {
-        // get the commit of the split point
-        List<String> cAncestor = new ArrayList<String>();
-        cAncestor.add(C.getSHA1());
-        while (C.getParent() != null) {
-            C = Commit.readCommit(C.getParent());
-            cAncestor.add(C.getSHA1());
-        }
-        return cAncestor;
-    }
+
 
     public static Map<String, String> getHeadCommitFileTable() {
         Commit C = Commit.readCommit(getheadcommitSha1());

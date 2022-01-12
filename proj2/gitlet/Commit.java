@@ -83,6 +83,15 @@ public class Commit implements Serializable {
         }
     }
 
+    /** get second parent of the commit */
+    public String getSecondParent() {
+        if (secondParent != null) {
+            return secondParent;
+        } else {
+            return null;
+        }
+    }
+
     /** get message of the commit */
     public String getMessage() {
         if (message != null) {
@@ -119,6 +128,38 @@ public class Commit implements Serializable {
         }
         Commit c = Utils.readObject(inFile, Commit.class);
         return c;
+    }
+
+    public List<String> getCommitAncestor() {
+        // get the commit of the split point
+        List<String> Ancestor = new ArrayList<String>();
+        Ancestor.add(getSHA1());
+        LinkedList<String> queue = new LinkedList<>();
+        queue.add(getSHA1());
+        while (!queue.isEmpty()) {
+            Commit Curr = readCommit(queue.pop());
+            if (Curr.getParent() != null) {
+                queue.add(Curr.getParent());
+                if (!Ancestor.contains(Curr.getParent())) {
+                    Ancestor.add(Curr.getParent());
+                }
+            }
+            if (Curr.getSecondParent() != null) {
+                queue.add(Curr.getSecondParent());
+                if (!Ancestor.contains(Curr.getSecondParent())) {
+                    Ancestor.add(Curr.getSecondParent());
+                }
+            }
+        }
+        return Ancestor;
+    }
+
+    /** get split point */
+    public static String getSplitHash(Commit C, Commit B) {
+        List<String> cAncestors = C.getCommitAncestor();
+        List<String> bAncestors = B.getCommitAncestor();
+        cAncestors.retainAll(bAncestors);
+        return cAncestors.get(0);
     }
 
     /** convert commit to String */
